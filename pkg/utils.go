@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
+var ValidChars = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+
 // GetManPath get the path of `man` command.
 func GetManPath() (string, error) {
-	cmd := exec.Command("which", "main")
+	cmd := exec.Command("which", "man")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("could not find 'man': %v", err)
@@ -21,6 +24,7 @@ func GetManPath() (string, error) {
 	return path, nil
 }
 
+// SetManInfo is used to set man path and then run man [txtPath] to show deatils.
 func SetManInfo(manPath, txtPath string) {
 	os.Setenv("PATH", fmt.Sprintf("%v:", manPath)+os.Getenv("PATH"))
 
