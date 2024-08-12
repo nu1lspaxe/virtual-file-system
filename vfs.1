@@ -1,0 +1,42 @@
+.TH "Virtual File System" 1 "August 2024" "Virtual File System 1.0" "User Commands"
+.SH NAME
+Virtual File System \- a CLI file system.
+.SH SYNOPSIS
+.B vfs
+[\-h | \-\-help] [command] [options]
+.SH DESCRIPTION
+This is a pure CLI file system written in Go. The system is used to deal with three types of management: User, Folder, and File.
+
+.SH COMMANDS
+
+.TP
+.B register [username]
+Register a new user.
+
+.TP
+.B create-folder [username] [foldername] [description]
+Create a folder for the specified user.
+.TP
+.B delete-folder [username] [foldername]
+Delete the specified folder for the user.
+.TP
+.B list-folders [username] [--sort-name|--sort-created] [asc|desc]
+List all the folders for the user.
+.TP
+.B rename-folder [username] [foldername] [new-folder-name]
+Rename the folder.
+
+.TP
+.B create-file [username] [foldername] [filename] [description]?
+Create file from a folder for the user.
+.TP
+.B delete-file [username] [foldername] [filename]
+Delete file from a folder for the user.
+.TP
+.B list-files [username] [foldername] [--sort-name|--sort-created] [asc|desc]
+List all files under the folder for the user.
+
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help options.
