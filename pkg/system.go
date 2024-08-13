@@ -61,7 +61,16 @@ func (s *System) Execute(input string) {
 		s.CreateFolder(username, foldername, desc)
 
 	case "delete-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) != 3 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+
+		username := parts[1]
+		foldername := parts[2]
+
+		s.DeleteFolder(username, foldername)
+
 	case "list-folders":
 		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
 	case "rename-folder":
@@ -80,4 +89,68 @@ func (s *System) Execute(input string) {
 	default:
 		fmt.Fprintln(os.Stderr, ErrUnknown.ToString())
 	}
+}
+
+func (s *System) Register(username string) {
+	if !s.CharsValidator.MatchString(username) {
+		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(username))
+		return
+	}
+	if user := s.GetUser(username); user != nil {
+		fmt.Fprintln(os.Stderr, ErrAlreadyExists.ToString(username))
+		return
+	}
+
+	s.UserTable[username] = CreateUser(username)
+	fmt.Fprintf(os.Stdout, "Add %s successfully.\n", username)
+}
+
+func (s *System) GetUser(username string) *User {
+	for name := range s.UserTable {
+		if name == username {
+			return s.UserTable[username]
+		}
+	}
+	return nil
+}
+
+func (s *System) CreateFolder(username, foldername, desc string) {
+
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	if !s.CharsValidator.MatchString(foldername) {
+		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(foldername))
+		return
+	}
+	if folder := user.GetFolder(foldername); folder != nil {
+		fmt.Fprintln(os.Stderr, ErrAlreadyExists.ToString(foldername))
+		return
+	}
+
+	folder := CreateFolder(foldername, desc)
+	user.AddFolder(foldername, folder)
+
+	fmt.Fprintf(os.Stdout, "Create %s successfully.\n", foldername)
+}
+
+func (s *System) DeleteFolder(username, foldername string) {
+
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	if folder := user.GetFolder(foldername); folder == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(foldername))
+		return
+	}
+
+	fmt.Fprintf(os.Stdout, "Delete %v successfully.", foldername)
+}
+
+func (s *System) ListFolders(username string) {
+
 }

@@ -1,40 +1,19 @@
 package pkg
 
-import (
-	"fmt"
-	"os"
-)
+import "time"
 
 type Folder struct {
-	Files       []File
+	Name        string
 	Description string
+	Files       []File
+	CreatedAt   time.Time
 }
 
-func CreateFolder(desc string) *Folder {
+func CreateFolder(foldername, desc string) *Folder {
 	return &Folder{
-		Files:       make([]File, 0),
+		Name:        foldername,
 		Description: desc,
+		Files:       make([]File, 0),
+		CreatedAt:   time.Now(),
 	}
-}
-
-func (s *System) CreateFolder(username, foldername, desc string) {
-
-	user := s.GetUser(username)
-	if user == nil {
-		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
-		return
-	}
-	if !s.CharsValidator.MatchString(foldername) {
-		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(foldername))
-		return
-	}
-	if folder := user.GetFolder(foldername); folder != nil {
-		fmt.Fprintln(os.Stderr, ErrAlreadyExists.ToString(foldername))
-		return
-	}
-
-	folder := CreateFolder(desc)
-	user.AddFolder(foldername, folder)
-
-	fmt.Fprintf(os.Stdout, "Create %s successfully.\n", foldername)
 }
