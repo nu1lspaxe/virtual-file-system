@@ -9,7 +9,7 @@ import (
 )
 
 type System struct {
-	UserTable      map[string]User
+	UserTable      map[string]*User
 	CharsValidator *regexp.Regexp
 }
 
@@ -21,7 +21,7 @@ var (
 func SetupSystem() *System {
 	once.Do(func() {
 		VFSystem = &System{
-			UserTable:      make(map[string]User),
+			UserTable:      make(map[string]*User),
 			CharsValidator: regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
 		}
 	})
@@ -43,15 +43,23 @@ func (s *System) Execute(input string) {
 		}
 
 		username := parts[1]
-		msg := s.Register(username)
+		s.Register(username)
 
-		if msg != Succeed {
-			fmt.Fprintln(os.Stderr, msg)
-		} else {
-			fmt.Fprintf(os.Stdout, "Add %s successfully.\n", username)
-		}
 	case "create-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) < 3 || len(parts) > 4 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+
+		username := parts[1]
+		foldername := parts[2]
+		desc := ""
+		if len(parts) == 4 {
+			desc = parts[3]
+		}
+
+		s.CreateFolder(username, foldername, desc)
+
 	case "delete-folder":
 		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
 	case "list-folders":

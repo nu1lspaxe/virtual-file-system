@@ -1,8 +1,20 @@
 package pkg
 
+import (
+	"fmt"
+	"os"
+)
+
 type User struct {
 	Name    string
-	Folders []Folder
+	Folders map[string]*Folder
+}
+
+func CreateUser(username string) *User {
+	return &User{
+		Name:    username,
+		Folders: make(map[string]*Folder),
+	}
 }
 
 func (u *User) SetName(name string) {
@@ -13,34 +25,42 @@ func (u *User) GetName() string {
 	return u.Name
 }
 
-func (u *User) GetFolders() []Folder {
+func (u *User) GetFolder(foldername string) *Folder {
+	for f := range u.Folders {
+		if f == foldername {
+			return u.Folders[f]
+		}
+	}
+	return nil
+}
+
+func (u *User) GetFolders() map[string]*Folder {
 	return u.Folders
 }
 
-func (u *User) AddFolder(folder Folder) {
-	u.Folders = append(u.Folders, folder)
+func (u *User) AddFolder(foldername string, folder *Folder) {
+	u.Folders[foldername] = folder
 }
 
-func (s *System) Register(username string) RespondType {
+func (s *System) Register(username string) {
 	if !s.CharsValidator.MatchString(username) {
-		return ErrInvalidChars
+		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(username))
+		return
 	}
-	if s.ExistsUser(username) {
-		return ErrAlreadyExists
+	if user := s.GetUser(username); user != nil {
+		fmt.Fprintln(os.Stderr, ErrAlreadyExists.ToString(username))
+		return
 	}
 
-	s.UserTable[username] = User{
-		Name:    username,
-		Folders: []Folder{},
-	}
-	return Succeed
+	s.UserTable[username] = CreateUser(username)
+	fmt.Fprintf(os.Stdout, "Add %s successfully.\n", username)
 }
 
-func (s *System) ExistsUser(username string) bool {
-	for name, _ := range s.UserTable {
+func (s *System) GetUser(username string) *User {
+	for name := range s.UserTable {
 		if name == username {
-			return true
+			return s.UserTable[username]
 		}
 	}
-	return false
+	return nil
 }
