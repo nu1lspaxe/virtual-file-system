@@ -37,7 +37,19 @@ func (s *System) Execute(input string) {
 	command := parts[0]
 	switch command {
 	case "register":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) != 2 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+
+		username := parts[1]
+		msg := s.Register(username)
+
+		if msg != Succeed {
+			fmt.Fprintln(os.Stderr, msg)
+		} else {
+			fmt.Fprintf(os.Stdout, "Add %s successfully.\n", username)
+		}
 	case "create-folder":
 		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
 	case "delete-folder":
