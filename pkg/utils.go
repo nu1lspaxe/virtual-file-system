@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 )
 
 var (
-	ValidChars = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
-	manFile    string
+	manFile string
 )
 
 // GetManPath get the path of `man` command.

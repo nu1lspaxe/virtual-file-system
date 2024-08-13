@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"system/pkg"
 )
 
@@ -24,49 +23,18 @@ func main() {
 Welcome to Virtual File System!
 Type 'help' to get details and 'exit' to leave.
 `
-
 	fmt.Print(greetings)
 	fmt.Print("$ ")
 
+	vfs := pkg.SetupSystem()
+
 	for scanner.Scan() {
 		input := scanner.Text()
-		handleCommand(input)
+		vfs.Execute(input)
 		fmt.Print("$ ")
 	}
 
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
-	}
-}
-
-func handleCommand(input string) {
-	parts := strings.Fields(input)
-	if len(parts) == 0 {
-		return
-	}
-
-	command := parts[0]
-	switch command {
-	case "register":
-	case "create-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "delete-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "list-folders":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "rename-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "create-file":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "delete-file":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "list-files":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
-	case "help":
-		pkg.GetManInfo()
-	case "exit":
-		os.Exit(0)
-	default:
-		fmt.Fprintln(os.Stderr, "Error: Unknown command.")
 	}
 }
