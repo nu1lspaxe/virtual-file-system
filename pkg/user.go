@@ -12,14 +12,6 @@ func CreateUser(username string) *User {
 	}
 }
 
-func (u *User) SetName(name string) {
-	u.Name = name
-}
-
-func (u *User) GetName() string {
-	return u.Name
-}
-
 func (u *User) GetFolder(foldername string) *Folder {
 	for f := range u.Folders {
 		if f == foldername {

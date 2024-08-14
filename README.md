@@ -27,3 +27,8 @@ go run main.go -h
 # or run binary file
 ./vfs -h
 ```
+
+- Start your tour
+```bash
+go run main.go
+```

@@ -25,6 +25,10 @@ func CreateFolder(foldername, desc, username string) *Folder {
 	}
 }
 
+func (folder *Folder) SetName(foldername string) {
+	folder.Name = foldername
+}
+
 func (folder *Folder) GetFile(filename string) *File {
 	for f := range folder.Files {
 		if f == filename {

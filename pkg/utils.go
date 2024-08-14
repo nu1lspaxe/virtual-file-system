@@ -11,7 +11,7 @@ var (
 	manFile string
 )
 
-// GetManPath get the path of `man` command.
+// GetManPath to get the path of `man` command.
 func GetManPath() (string, error) {
 	cmd := exec.Command("which", "man")
 	output, err := cmd.Output()
@@ -25,7 +25,7 @@ func GetManPath() (string, error) {
 	return path, nil
 }
 
-// SetManInfo is used to set man path and then run man [txtPath] to show deatils.
+// SetManInfo to set man path and then run man [txtPath] to show deatils.
 func SetManInfo(manPath, txtPath string) {
 	os.Setenv("PATH", fmt.Sprintf("%v:", manPath)+os.Getenv("PATH"))
 	manFile = txtPath

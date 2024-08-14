@@ -19,6 +19,7 @@ var (
 	once     sync.Once
 )
 
+// SetupSystem create a singleton instance (system)
 func SetupSystem() *System {
 	once.Do(func() {
 		VFSystem = &System{
@@ -29,6 +30,7 @@ func SetupSystem() *System {
 	return VFSystem
 }
 
+// Execute to call APIs by command
 func (s *System) Execute(input string) {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
@@ -141,6 +143,7 @@ func (s *System) Execute(input string) {
 	}
 }
 
+// Register a new user
 func (s *System) Register(username string) {
 	if !s.CharsValidator.MatchString(username) {
 		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(username))
@@ -155,6 +158,7 @@ func (s *System) Register(username string) {
 	fmt.Fprintf(os.Stdout, "Add %s successfully.\n", username)
 }
 
+// GetUser to find and return user if exists
 func (s *System) GetUser(username string) *User {
 	for name := range s.UserTable {
 		if name == username {
@@ -164,6 +168,7 @@ func (s *System) GetUser(username string) *User {
 	return nil
 }
 
+// CreateFolder to create a folder for a user, description is optional
 func (s *System) CreateFolder(username, foldername, desc string) {
 
 	user := s.GetUser(username)
@@ -186,6 +191,7 @@ func (s *System) CreateFolder(username, foldername, desc string) {
 	fmt.Fprintf(os.Stdout, "Create %s successfully.\n", foldername)
 }
 
+// DeleteFolder to delete a folder from a user if exists
 func (s *System) DeleteFolder(username, foldername string) {
 
 	user := s.GetUser(username)
@@ -203,6 +209,7 @@ func (s *System) DeleteFolder(username, foldername string) {
 	fmt.Fprintf(os.Stdout, "Delete %v successfully.", foldername)
 }
 
+// ListFolders to list all the folders of a user if exist
 func (s *System) ListFolders(username, sortBy, order string) {
 	user := s.GetUser(username)
 	if user == nil {
@@ -239,6 +246,7 @@ func (s *System) ListFolders(username, sortBy, order string) {
 	}
 }
 
+// RenameFolder to rename a folder of a user
 func (s *System) RenameFolder(username, oldName, newName string) {
 	user := s.GetUser(username)
 	if user == nil {
@@ -255,12 +263,14 @@ func (s *System) RenameFolder(username, oldName, newName string) {
 	}
 
 	folder := user.GetFolder(oldName)
+	folder.SetName(newName)
 	user.Folders[newName] = folder
 	delete(user.Folders, oldName)
 
 	fmt.Fprintf(os.Stdout, "Rename %s to %s successfully.\n", oldName, newName)
 }
 
+// CreateFile to create a file under a folder of a user
 func (s *System) CreateFile(username, foldername, filename, desc string) {
 	user := s.GetUser(username)
 	if user == nil {
@@ -289,6 +299,7 @@ func (s *System) CreateFile(username, foldername, filename, desc string) {
 	fmt.Fprintf(os.Stdout, "Create %s in %s/%s successfully.\n", filename, username, foldername)
 }
 
+// DeleteFile to delete file under a folder from a user if exist
 func (s *System) DeleteFile(username, foldername, filename string) {
 	user := s.GetUser(username)
 	if user == nil {
@@ -311,6 +322,7 @@ func (s *System) DeleteFile(username, foldername, filename string) {
 	fmt.Fprintf(os.Stdout, "Delete %s in %s/%s successfully.\n", filename, username, foldername)
 }
 
+// ListFiles to list all files from a folder of a user
 func (s *System) ListFiles(username, foldername, sortBy, order string) {
 	user := s.GetUser(username)
 	if user == nil {

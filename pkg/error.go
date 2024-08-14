@@ -29,7 +29,7 @@ func (r RespondType) ToString(item ...string) string {
 	case ErrNotExists:
 		return fmt.Sprintf("Error: The %v doesn't exist.", item)
 	case ErrArgsLength:
-		return "Error: Invalid command syntax. Check `help` to get info!"
+		return "Error: Invalid length. Check `help` to get info!"
 	case ErrInvalidFlag:
 		return "Error: Invalid flags. They can be [--sort-name|--sort-created] [asc|desc]."
 	case ErrUnknownCmd:
