@@ -10,7 +10,7 @@ import (
 func init() {
 	path, err := pkg.GetManPath()
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return
 	}
 	pkg.SetManInfo(path, "./vfs.1")
@@ -35,6 +35,6 @@ Type 'help' to get details and 'exit' to leave.
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 }

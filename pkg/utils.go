@@ -41,7 +41,33 @@ func GetManInfo() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error running man: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func ParseArgs(path []string) (sortBy, order, msg string) {
+	sortBy = "name"
+	order = "asc"
+
+	if len(path) == 2 {
+		return sortBy, order, ""
+	}
+	args := path[2:]
+
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--sort-name":
+			sortBy = "name"
+		case "--sort-created":
+			sortBy = "created"
+		case "asc":
+			order = "asc"
+		case "desc":
+			order = "desc"
+		default:
+			return "", "", ErrInvalidFlag.ToString()
+		}
+	}
+	return sortBy, order, ""
 }

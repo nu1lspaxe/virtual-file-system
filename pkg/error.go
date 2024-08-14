@@ -11,7 +11,8 @@ const (
 	ErrInvalidChars
 	ErrNotExists
 	ErrArgsLength
-	ErrUnknown
+	ErrInvalidFlag
+	ErrUnknownCmd
 
 	WarnNoFolders
 	WarnEmptyFolder
@@ -29,7 +30,9 @@ func (r RespondType) ToString(item ...string) string {
 		return fmt.Sprintf("Error: The %v doesn't exist.", item)
 	case ErrArgsLength:
 		return "Error: Invalid command syntax. Check `help` to get info!"
-	case ErrUnknown:
+	case ErrInvalidFlag:
+		return "Error: Invalid flags. They can be [--sort-name|--sort-created] [asc|desc]."
+	case ErrUnknownCmd:
 		return "Unrecognized command."
 	case WarnNoFolders:
 		return fmt.Sprintf("Warning: The %v doesn't have any folders", item)

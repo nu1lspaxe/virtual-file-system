@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -72,7 +73,20 @@ func (s *System) Execute(input string) {
 		s.DeleteFolder(username, foldername)
 
 	case "list-folders":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) < 2 || len(parts) > 4 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+
+		username := parts[1]
+		sortBy, order, msg := ParseArgs(parts)
+		if msg != "" {
+			fmt.Fprintln(os.Stderr, msg)
+			return
+		}
+
+		s.ListFolders(username, sortBy, order)
+
 	case "rename-folder":
 		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
 	case "create-file":
@@ -87,7 +101,7 @@ func (s *System) Execute(input string) {
 		fmt.Println("See you.")
 		os.Exit(0)
 	default:
-		fmt.Fprintln(os.Stderr, ErrUnknown.ToString())
+		fmt.Fprintln(os.Stderr, ErrUnknownCmd.ToString())
 	}
 }
 
@@ -151,6 +165,43 @@ func (s *System) DeleteFolder(username, foldername string) {
 	fmt.Fprintf(os.Stdout, "Delete %v successfully.", foldername)
 }
 
-func (s *System) ListFolders(username string) {
+func (s *System) ListFolders(username, sortBy, order string) {
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	if len(user.Folders) == 0 {
+		fmt.Fprintln(os.Stderr, WarnNoFolders.ToString(username))
+		return
+	}
 
+	folders := user.GetFolders()
+
+	switch sortBy {
+	case "name":
+		sort.Slice(folders, func(i, j int) bool {
+			if order == "asc" {
+				return folders[i].Name < folders[j].Name
+			}
+			return folders[i].Name > folders[j].Name
+		})
+
+	case "created":
+		sort.Slice(folders, func(i, j int) bool {
+			if order == "asc" {
+				return folders[i].CreatedAt.Before(folders[j].CreatedAt)
+			}
+			return folders[i].CreatedAt.After(folders[j].CreatedAt)
+		})
+	}
+
+	fmt.Fprintf(os.Stdout, "Name\t\tDescription\tCreatedAt\n")
+	for _, folder := range folders {
+		fmt.Fprintf(os.Stdout, "%s\t\t%s\t\t%s\n",
+			folder.Name,
+			folder.Description,
+			folder.CreatedAt.Format("2006-01-02 15:04:05"),
+		)
+	}
 }
