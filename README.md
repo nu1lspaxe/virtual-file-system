@@ -67,10 +67,12 @@ list-files [username] [foldername] [--sort-name|--sort-created] [asc|desc]
     go run main.go
     ```
   - Run binary file
+    :exclamation: Binary file cannot be executed in powershell
     ```bash
     # go build -o vfs main.go
-    ./vfs # only works in linux-based system
+    ./vfs
     ```
+    
 
 - Get help information (by `-h` or `--help`)
 
@@ -81,8 +83,25 @@ list-files [username] [foldername] [--sort-name|--sort-created] [asc|desc]
 ---
 
 
-## Test Record
+### Test Record
 ```bash
 go test -cover ./...
 # ok      system/pkg      0.005s  coverage: 54.7% of statements
 ```
+
+-- 
+
+### Verions 
+
+#### v1.0.0
+Essential functions are released.
+
+##### v1.0.1
+Modify help information display in window/linux system.
+Handbook will be shown even cannot find `man` command.
+
+##### v1.0.2
+Fix `rename-folder` function (didn't get folder from user)
+
+##### v1.0.3
+Append unit tests (coverage: 54.7% of statemetns)
