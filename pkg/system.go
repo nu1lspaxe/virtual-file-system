@@ -77,7 +77,7 @@ func (s *System) Execute(input string) {
 		}
 
 		username := parts[1]
-		sortBy, order, msg := ParseArgs(parts)
+		sortBy, order, msg := ParseArgs(parts[2:])
 		if msg != "" {
 			fmt.Fprintln(os.Stderr, msg)
 			return
@@ -95,11 +95,42 @@ func (s *System) Execute(input string) {
 		s.RenameFolder(username, oldName, newName)
 
 	case "create-file":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) < 4 || len(parts) > 5 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+		username, foldername, filename := parts[1], parts[2], parts[3]
+		desc := ""
+		if len(parts) == 5 {
+			desc = parts[4]
+		}
+
+		s.CreateFile(username, foldername, filename, desc)
+
 	case "delete-file":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) != 4 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+		username, foldername, filename := parts[1], parts[2], parts[3]
+
+		s.DeleteFile(username, foldername, filename)
+
 	case "list-files":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) < 3 || len(parts) > 5 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+
+		username, foldername := parts[1], parts[2]
+		sortBy, order, msg := ParseArgs(parts[3:])
+		if msg != "" {
+			fmt.Fprintln(os.Stderr, msg)
+			return
+		}
+
+		s.ListFiles(username, foldername, sortBy, order)
+
 	case "help":
 		GetManInfo()
 	case "exit":
@@ -149,7 +180,7 @@ func (s *System) CreateFolder(username, foldername, desc string) {
 		return
 	}
 
-	folder := CreateFolder(foldername, desc)
+	folder := CreateFolder(foldername, desc, username)
 	user.AddFolder(foldername, folder)
 
 	fmt.Fprintf(os.Stdout, "Create %s successfully.\n", foldername)
@@ -166,6 +197,8 @@ func (s *System) DeleteFolder(username, foldername string) {
 		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(foldername))
 		return
 	}
+
+	delete(user.Folders, foldername)
 
 	fmt.Fprintf(os.Stdout, "Delete %v successfully.", foldername)
 }
@@ -201,13 +234,8 @@ func (s *System) ListFolders(username, sortBy, order string) {
 		})
 	}
 
-	fmt.Fprintf(os.Stdout, "Name\t\tDescription\t\tCreatedAt\n")
 	for _, folder := range folders {
-		fmt.Fprintf(os.Stdout, "%s\t\t%s\t\t\t%s\n",
-			folder.Name,
-			folder.Description,
-			folder.CreatedAt.Format("2006-01-02 15:04:05"),
-		)
+		fmt.Fprintln(os.Stdout, folder.ToString())
 	}
 }
 
@@ -231,4 +259,95 @@ func (s *System) RenameFolder(username, oldName, newName string) {
 	delete(user.Folders, oldName)
 
 	fmt.Fprintf(os.Stdout, "Rename %s to %s successfully.\n", oldName, newName)
+}
+
+func (s *System) CreateFile(username, foldername, filename, desc string) {
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	folder := user.GetFolder(foldername)
+	if folder == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(foldername))
+		return
+	}
+	if !s.CharsValidator.MatchString(filename) {
+		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(filename))
+		return
+	}
+	file := folder.GetFile(filename)
+	if file != nil {
+		fmt.Fprintln(os.Stderr, ErrAlreadyExists.ToString(filename))
+		return
+	}
+
+	folder.AddFile(filename, CreateFile(
+		filename, desc, foldername, username,
+	))
+
+	fmt.Fprintf(os.Stdout, "Create %s in %s/%s successfully.\n", filename, username, foldername)
+}
+
+func (s *System) DeleteFile(username, foldername, filename string) {
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	folder := user.GetFolder(foldername)
+	if folder == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(foldername))
+		return
+	}
+	file := folder.GetFile(filename)
+	if file == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(filename))
+		return
+	}
+
+	delete(folder.Files, filename)
+
+	fmt.Fprintf(os.Stdout, "Delete %s in %s/%s successfully.\n", filename, username, foldername)
+}
+
+func (s *System) ListFiles(username, foldername, sortBy, order string) {
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	folder := user.GetFolder(foldername)
+	if folder == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(foldername))
+		return
+	}
+	if len(folder.Files) == 0 {
+		fmt.Fprintln(os.Stderr, WarnEmptyFolder.ToString())
+		return
+	}
+
+	files := folder.GetFiles()
+
+	switch sortBy {
+	case "name":
+		sort.Slice(files, func(i, j int) bool {
+			if order == "asc" {
+				return files[i].Name < files[j].Name
+			}
+			return files[i].Name > files[j].Name
+		})
+
+	case "created":
+		sort.Slice(files, func(i, j int) bool {
+			if order == "asc" {
+				return files[i].CreatedAt.Before(files[j].CreatedAt)
+			}
+			return files[i].CreatedAt.After(files[j].CreatedAt)
+		})
+	}
+
+	for _, file := range files {
+		fmt.Fprintln(os.Stdout, file.ToString())
+	}
 }

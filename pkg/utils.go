@@ -46,14 +46,13 @@ func GetManInfo() {
 	}
 }
 
-func ParseArgs(path []string) (sortBy, order, msg string) {
+func ParseArgs(args []string) (sortBy, order, msg string) {
 	sortBy = "name"
 	order = "asc"
 
-	if len(path) == 2 {
+	if len(args) == 0 {
 		return sortBy, order, ""
 	}
-	args := path[2:]
 
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
