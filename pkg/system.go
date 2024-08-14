@@ -52,8 +52,7 @@ func (s *System) Execute(input string) {
 			return
 		}
 
-		username := parts[1]
-		foldername := parts[2]
+		username, foldername := parts[1], parts[2]
 		desc := ""
 		if len(parts) == 4 {
 			desc = parts[3]
@@ -67,8 +66,7 @@ func (s *System) Execute(input string) {
 			return
 		}
 
-		username := parts[1]
-		foldername := parts[2]
+		username, foldername := parts[1], parts[2]
 
 		s.DeleteFolder(username, foldername)
 
@@ -88,7 +86,14 @@ func (s *System) Execute(input string) {
 		s.ListFolders(username, sortBy, order)
 
 	case "rename-folder":
-		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
+		if len(parts) != 4 {
+			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
+			return
+		}
+		username, oldName, newName := parts[1], parts[2], parts[3]
+
+		s.RenameFolder(username, oldName, newName)
+
 	case "create-file":
 		fmt.Fprintln(os.Stderr, "Error: Not implement yet.")
 	case "delete-file":
@@ -196,12 +201,34 @@ func (s *System) ListFolders(username, sortBy, order string) {
 		})
 	}
 
-	fmt.Fprintf(os.Stdout, "Name\t\tDescription\tCreatedAt\n")
+	fmt.Fprintf(os.Stdout, "Name\t\tDescription\t\tCreatedAt\n")
 	for _, folder := range folders {
-		fmt.Fprintf(os.Stdout, "%s\t\t%s\t\t%s\n",
+		fmt.Fprintf(os.Stdout, "%s\t\t%s\t\t\t%s\n",
 			folder.Name,
 			folder.Description,
 			folder.CreatedAt.Format("2006-01-02 15:04:05"),
 		)
 	}
+}
+
+func (s *System) RenameFolder(username, oldName, newName string) {
+	user := s.GetUser(username)
+	if user == nil {
+		fmt.Fprintln(os.Stderr, ErrNotExists.ToString(username))
+		return
+	}
+	if len(user.Folders) == 0 {
+		fmt.Fprintln(os.Stderr, WarnNoFolders.ToString(username))
+		return
+	}
+	if !s.CharsValidator.MatchString(newName) {
+		fmt.Fprintln(os.Stderr, ErrInvalidChars.ToString(newName))
+		return
+	}
+
+	folder := user.GetFolder(oldName)
+	user.Folders[newName] = folder
+	delete(user.Folders, oldName)
+
+	fmt.Fprintf(os.Stdout, "Rename %s to %s successfully.\n", oldName, newName)
 }
