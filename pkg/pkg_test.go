@@ -1,7 +1,10 @@
 package pkg
 
 import (
+	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUser(t *testing.T) {
@@ -129,117 +132,231 @@ func TestSetupSystem(t *testing.T) {
 
 }
 
+func GetTestBufs() (outBuf, errBuf *bytes.Buffer) {
+	return &bytes.Buffer{}, &bytes.Buffer{}
+}
+
+func ResetBufs(outBuf, errBuf *bytes.Buffer) {
+	outBuf.Reset()
+	errBuf.Reset()
+}
+
 func TestRegister(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
-	sys.Execute("register user1")
+	sys.Register(outBuf, errBuf, "user1")
+	assert.Equal(t, "Add user1 successfully.\n", outBuf.String())
 
 	if _, exists := sys.UserTable["user1"]; !exists {
 		t.Errorf("User `user1` doesn't register in system\n")
 	}
+	ResetBufs(outBuf, errBuf)
 
-	sys.Execute("register user2")
+	sys.Register(outBuf, errBuf, "user1")
+	assert.Equal(t, ErrAlreadyExists.ToString("user1")+"\n", errBuf.String())
+	ResetBufs(outBuf, errBuf)
 
-	if len(sys.UserTable) != 2 {
-		t.Errorf("Amount of regitered user want 2, but got %d\n", len(sys.UserTable))
-	}
-
-	sys.Execute("register user1")
-
-	if len(sys.UserTable) != 2 {
-		t.Errorf("user1 cannot be registered twice\n")
-	}
-
-	sys.Execute("register u$er")
-	if len(sys.UserTable) != 2 {
-		t.Errorf("Names contain invalid chars cannot be used\n")
-	}
+	sys.Register(outBuf, errBuf, "u$er")
+	assert.Equal(t, ErrInvalidChars.ToString("u$er")+"\n", errBuf.String())
+	ResetBufs(outBuf, errBuf)
 }
 
 func TestCreateFolder(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
 	sys.Execute("register user1")
-	sys.Execute("create-folder user1 folder1")
 
-	if len(sys.UserTable["user1"].Folders) != 1 {
-		t.Errorf("Folder `folder1` doesn't be create for user1\n")
+	tests := []struct {
+		user        string
+		folder      string
+		desc        string
+		expectedOut string
+		expectedErr string
+	}{
+		{"user1", "folder1", "", "Create folder1 successfully.\n", ""},
+		{"user2", "folder1", "", "", ErrNotExists.ToString("user2") + "\n"},
+		{"user1", "fo[]er1", "", "", ErrInvalidChars.ToString("fo[]er1") + "\n"},
+	}
+
+	for _, tt := range tests {
+		sys.CreateFolder(outBuf, errBuf, tt.user, tt.folder, tt.desc)
+
+		assert.Equal(t, tt.expectedOut, outBuf.String())
+		assert.Equal(t, tt.expectedErr, errBuf.String())
+		ResetBufs(outBuf, errBuf)
 	}
 }
 
 func TestDeleteFolder(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
 	sys.Execute("register user1")
 	sys.Execute("create-folder user1 folder1")
-	sys.Execute("delete-folder user1 folder1")
 
-	if len(sys.UserTable["user1"].Folders) != 0 {
-		t.Errorf("Folder `folder1` doesn't delete from user1\n")
+	tests := []struct {
+		username    string
+		foldername  string
+		expectedOut string
+		expectedErr string
+	}{
+		{"user1", "folder1", "Delete folder1 successfully.\n", ""},
+		{"user2", "folder1", "", ErrNotExists.ToString("user2") + "\n"},
+		{"user1", "folder2", "", ErrNotExists.ToString("folder2") + "\n"},
+	}
+
+	for _, tt := range tests {
+		sys.DeleteFolder(outBuf, errBuf, tt.username, tt.foldername)
+		assert.Equal(t, tt.expectedOut, outBuf.String())
+		assert.Equal(t, tt.expectedErr, errBuf.String())
+		ResetBufs(outBuf, errBuf)
 	}
 }
 
 func TestRenameFolder(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
 	sys.Execute("register user1")
 	sys.Execute("create-folder user1 folder1")
 
-	sys.Execute("rename-folder user1 folder1 folder2")
-
-	folder1 := sys.UserTable["user1"].GetFolder("folder1")
-	folder2 := sys.UserTable["user1"].GetFolder("folder2")
-
-	if folder1 != nil {
-		t.Errorf("Folder `folder1` doesn't rename successfully\n")
+	tests := []struct {
+		username    string
+		folderFrom  string
+		folderTo    string
+		expectedOut string
+		expectedErr string
+	}{
+		{"user1", "folder1", "folder2", "Rename folder1 to folder2 successfully.\n", ""},
+		{"user2", "folder2", "folder3", "", ErrNotExists.ToString("user2") + "\n"},
+		{"user1", "folder3", "folder4", "", WarnNoFolders.ToString("folder3") + "\n"},
+		{"user1", "folder2", "folder+", "", ErrInvalidChars.ToString("folder+") + "\n"},
 	}
 
-	if folder2.Name != "folder2" {
-		t.Errorf("Expected foldername folder2, but got %s\n", folder2.Name)
+	for _, tt := range tests {
+		sys.RenameFolder(outBuf, errBuf, tt.username, tt.folderFrom, tt.folderTo)
+		assert.Equal(t, tt.expectedOut, outBuf.String())
+		assert.Equal(t, tt.expectedErr, errBuf.String())
+		ResetBufs(outBuf, errBuf)
 	}
 
-	sys.Execute("rename-folder user1 folder2 folder+")
-	if folder2.Name != "folder2" {
-		t.Errorf("Names contain invalid chars cannot be used\n")
-	}
 }
 
 func TestCreateFile(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
 	sys.Execute("register user1")
 	sys.Execute("create-folder user1 folder1")
-	sys.Execute("create-file user1 folder1 file1")
-	sys.Execute("create-file user1 folder1 file2")
-	sys.Execute("create-file user2 folder1 file2")
 
-	folder1 := sys.UserTable["user1"].Folders["folder1"]
-	if len(folder1.Files) != 2 {
-		t.Errorf("Expected contain 2 files, but got %d\n", len(folder1.Files))
+	tests := []struct {
+		username    string
+		foldername  string
+		filename    string
+		expectedOut string
+		expectedErr string
+	}{
+		{"user1", "folder1", "file1", "Create file1 in user1/folder1 successfully.\n", ""},
+		{"user2", "folder1", "file1", "", ErrNotExists.ToString("user2") + "\n"},
+		{"user1", "folder2", "file1", "", ErrNotExists.ToString("folder2") + "\n"},
+		{"user1", "folder1", "f[]e1", "", ErrInvalidChars.ToString("f[]e1") + "\n"},
+		{"user1", "folder1", "file1", "", ErrAlreadyExists.ToString("file1") + "\n"},
 	}
 
-	sys.Execute("create-file user1 folder1 fil@")
-	if len(folder1.Files) != 2 {
-		t.Errorf("Names contain invalid chars cannot be used\n")
+	for _, tt := range tests {
+		sys.CreateFile(outBuf, errBuf, tt.username, tt.foldername, tt.filename, "")
+		assert.Equal(t, tt.expectedOut, outBuf.String())
+		assert.Equal(t, tt.expectedErr, errBuf.String())
+		ResetBufs(outBuf, errBuf)
 	}
+
 }
 
 func TestDeleteFile(t *testing.T) {
 	sys := SetupSystem()
 	defer sys.Reset()
+	outBuf, errBuf := GetTestBufs()
 
 	sys.Execute("register user1")
 	sys.Execute("create-folder user1 folder1")
 	sys.Execute("create-file user1 folder1 file1")
-	sys.Execute("delete-file user1 folder1 file1")
 
-	folder1 := sys.UserTable["user1"].Folders["folder1"]
-	if len(folder1.Files) != 0 {
-		t.Errorf("Expected contain 0 files, but got %d\n", len(folder1.Files))
+	tests := []struct {
+		username    string
+		foldername  string
+		filename    string
+		expectedOut string
+		expectedErr string
+	}{
+		{"user1", "folder1", "file1", "Delete file1 in user1/folder1 successfully.\n", ""},
+		{"user2", "folder1", "file1", "", ErrNotExists.ToString("user2") + "\n"},
+		{"user1", "folder2", "file1", "", ErrNotExists.ToString("folder2") + "\n"},
+		{"user1", "folder1", "file1", "", ErrNotExists.ToString("file1") + "\n"},
+	}
+
+	for _, tt := range tests {
+		sys.DeleteFile(outBuf, errBuf, tt.username, tt.foldername, tt.filename)
+		assert.Equal(t, tt.expectedOut, outBuf.String())
+		assert.Equal(t, tt.expectedErr, errBuf.String())
+		ResetBufs(outBuf, errBuf)
+	}
+
+}
+
+func TestParseArgs(t *testing.T) {
+	tests := []struct {
+		args           []string
+		expectedSortBy string
+		expectedOrder  string
+		expectedMsg    string
+	}{
+		{[]string{}, "name", "asc", ""},
+
+		{[]string{"--sort-name"}, "name", "asc", ""},
+		{[]string{"--sort-created"}, "created", "asc", ""},
+
+		{[]string{"asc"}, "name", "asc", ""},
+		{[]string{"desc"}, "name", "desc", ""},
+
+		{[]string{"--sort-created", "desc"}, "created", "desc", ""},
+		{[]string{"--sort-name", "asc"}, "name", "asc", ""},
+
+		{[]string{"--invalid-flag"}, "", "", ErrInvalidFlag.ToString()},
+	}
+
+	for _, tt := range tests {
+		sortBy, order, msg := ParseArgs(tt.args)
+		assert.Equal(t, tt.expectedSortBy, sortBy)
+		assert.Equal(t, tt.expectedOrder, order)
+		assert.Equal(t, tt.expectedMsg, msg)
+	}
+}
+
+func TestCharsValidator(t *testing.T) {
+	tests := []struct {
+		input         string
+		expectedValid bool
+	}{
+		{"valid_input", true},
+		{"another_valid123", true},
+		{"valid_input_with_underscore", true},
+		{"invalid@char", false},
+		{"spaces not allowed", false},
+	}
+
+	for _, tt := range tests {
+		sys := SetupSystem()
+		isValid := sys.CharsValidator.MatchString(tt.input)
+
+		if isValid != tt.expectedValid {
+			t.Errorf("input %q: expected validity %v, got %v", tt.input, tt.expectedValid, isValid)
+		}
 	}
 }

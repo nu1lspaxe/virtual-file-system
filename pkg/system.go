@@ -31,6 +31,7 @@ func SetupSystem() *System {
 	return VFSystem
 }
 
+// Reset to release System instance
 func (s *System) Reset() {
 	s = nil
 	once = sync.Once{}
@@ -98,9 +99,9 @@ func (s *System) Execute(input string) {
 			fmt.Fprintln(os.Stderr, ErrArgsLength.ToString())
 			return
 		}
-		username, oldName, newName := parts[1], parts[2], parts[3]
+		username, folderFrom, folderTo := parts[1], parts[2], parts[3]
 
-		s.RenameFolder(os.Stdout, os.Stderr, username, oldName, newName)
+		s.RenameFolder(os.Stdout, os.Stderr, username, folderFrom, folderTo)
 
 	case "create-file":
 		if len(parts) < 4 || len(parts) > 5 {
@@ -254,27 +255,27 @@ func (s *System) ListFolders(w io.Writer, ew io.Writer, username, sortBy, order 
 }
 
 // RenameFolder to rename a folder of a user
-func (s *System) RenameFolder(w io.Writer, ew io.Writer, username, oldName, newName string) {
+func (s *System) RenameFolder(w io.Writer, ew io.Writer, username, folderFrom, folderTo string) {
 	user := s.GetUser(username)
 	if user == nil {
 		fmt.Fprintln(ew, ErrNotExists.ToString(username))
 		return
 	}
-	folder := user.GetFolder(oldName)
+	folder := user.GetFolder(folderFrom)
 	if folder == nil {
-		fmt.Fprintln(ew, WarnNoFolders.ToString(oldName))
+		fmt.Fprintln(ew, WarnNoFolders.ToString(folderFrom))
 		return
 	}
-	if !s.CharsValidator.MatchString(newName) {
-		fmt.Fprintln(ew, ErrInvalidChars.ToString(newName))
+	if !s.CharsValidator.MatchString(folderTo) {
+		fmt.Fprintln(ew, ErrInvalidChars.ToString(folderTo))
 		return
 	}
 
-	folder.SetName(newName)
-	user.Folders[newName] = folder
-	delete(user.Folders, oldName)
+	folder.SetName(folderTo)
+	user.Folders[folderTo] = folder
+	delete(user.Folders, folderFrom)
 
-	fmt.Fprintf(w, "Rename %s to %s successfully.\n", oldName, newName)
+	fmt.Fprintf(w, "Rename %s to %s successfully.\n", folderFrom, folderTo)
 }
 
 // CreateFile to create a file under a folder of a user
