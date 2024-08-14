@@ -135,6 +135,7 @@ func (s *System) Execute(input string) {
 
 	case "help":
 		GetManInfo()
+
 	case "exit":
 		fmt.Println("See you.")
 		os.Exit(0)

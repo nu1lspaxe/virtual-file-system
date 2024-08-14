@@ -10,8 +10,7 @@ import (
 func init() {
 	path, err := pkg.GetManPath()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "Warning: cannot load help info because %v\n", err)
 	}
 	pkg.SetManInfo(path, "./vfs.1")
 }

@@ -16,7 +16,7 @@ func GetManPath() (string, error) {
 	cmd := exec.Command("which", "man")
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("could not find 'man': %v", err)
+		return "", fmt.Errorf("could not find 'man'")
 	}
 	path := strings.TrimSpace(string(output))
 	if path == "" {
@@ -41,8 +41,7 @@ func GetManInfo() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintln(os.Stdout, GetHelpInfo())
 	}
 }
 
@@ -69,4 +68,52 @@ func ParseArgs(args []string) (sortBy, order, msg string) {
 		}
 	}
 	return sortBy, order, ""
+}
+
+func GetHelpInfo() string {
+	return `
+Virtual File System(1)                              User Commands                              Virtual File System(1)
+
+
+NAME
+       Virtual File System - a CLI file system.
+
+SYNOPSIS
+       vfs [-h | --help] [command] [options]
+
+DESCRIPTION
+       This is a pure CLI file system written in Go. The system is used to deal with three types of management: User,
+       Folder, and File.
+
+COMMANDS
+       register [username]
+              Register a new user.
+
+       create-folder [username] [foldername] [description]
+              Create a folder for the specified user.
+
+       delete-folder [username] [foldername]
+              Delete the specified folder for the user.
+
+       list-folders [username] [--sort-name|--sort-created] [asc|desc]
+              List all the folders for the user.
+
+       rename-folder [username] [foldername] [new-folder-name]
+              Rename the folder.
+
+       create-file [username] [foldername] [filename] [description]?
+              Create file from a folder for the user.
+
+       delete-file [username] [foldername] [filename]
+              Delete file from a folder for the user.
+
+       list-files [username] [foldername] [--sort-name|--sort-created] [asc|desc]
+              List all files under the folder for the user.
+
+OPTIONS
+       -h, --help
+              Show help options.
+
+Virtual File System 1.0                              August 2024                               Virtual File System(1)
+`
 }
