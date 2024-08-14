@@ -23,11 +23,16 @@ var (
 func SetupSystem() *System {
 	once.Do(func() {
 		VFSystem = &System{
-			UserTable:      make(map[string]*User),
+			UserTable:      make(map[string]*User, 0),
 			CharsValidator: regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
 		}
 	})
 	return VFSystem
+}
+
+func (s *System) Reset() {
+	s = nil
+	once = sync.Once{}
 }
 
 // Execute to call APIs by command

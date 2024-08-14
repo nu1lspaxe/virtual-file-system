@@ -13,6 +13,8 @@ func init() {
 		fmt.Fprintf(os.Stderr, "Warning: cannot load help info because %v\n", err)
 	}
 	pkg.SetManInfo(path, "./vfs.1")
+
+	pkg.SetupSystem()
 }
 
 func main() {
@@ -25,11 +27,9 @@ Type 'help' to get details and 'exit' to leave.
 	fmt.Print(greetings)
 	fmt.Print("$ ")
 
-	vfs := pkg.SetupSystem()
-
 	for scanner.Scan() {
 		input := scanner.Text()
-		vfs.Execute(input)
+		pkg.VFSystem.Execute(input)
 		fmt.Print("$ ")
 	}
 

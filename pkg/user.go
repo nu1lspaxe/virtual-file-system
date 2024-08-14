@@ -8,7 +8,7 @@ type User struct {
 func CreateUser(username string) *User {
 	return &User{
 		Name:    username,
-		Folders: make(map[string]*Folder),
+		Folders: make(map[string]*Folder, 0),
 	}
 }
 
