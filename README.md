@@ -77,3 +77,12 @@ list-files [username] [foldername] [--sort-name|--sort-created] [asc|desc]
     ```bash
     go run main.go -h
     ```
+
+---
+
+
+## Test Record
+```bash
+go test -cover ./...
+# ok      system/pkg      0.005s  coverage: 54.7% of statements
+```
