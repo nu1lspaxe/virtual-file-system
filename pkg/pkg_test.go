@@ -30,23 +30,14 @@ func TestUserFolders(t *testing.T) {
 	user.AddFolder(foldername, folder)
 
 	userFolder := user.GetFolder(foldername)
-
-	if userFolder != folder {
-		t.Errorf("Expected be the same folder\n")
-	}
-
-	if userFolder.Name != foldername {
-		t.Errorf("Expected foldername %s, but got %s\n", foldername, userFolder.Name)
-	}
+	assert.Equal(t, userFolder.Name, foldername)
+	assert.Equal(t, userFolder, folder)
 
 	folders := user.GetFolders()
-	if len(folders) != 1 {
-		t.Errorf("Expected one folder from the user\n")
-	}
+	assert.Equal(t, len(folders), 1)
 
-	if fake := user.GetFolder("fakename"); fake != nil {
-		t.Errorf("Expected nil but got %v\n", fake)
-	}
+	fake := user.GetFolder("fakename")
+	assert.Nil(t, fake)
 }
 
 func TestFolder(t *testing.T) {
@@ -55,21 +46,12 @@ func TestFolder(t *testing.T) {
 	username := "testuser"
 
 	folder := CreateFolder(foldername, desc, username)
+	assert.Equal(t, folder.Name, foldername)
+	assert.Equal(t, len(folder.Files), 0)
 
-	if folder.Name != foldername {
-		t.Errorf("Expected foldername %s, but got %s\n", foldername, folder.Name)
-	}
-
-	if len(folder.Files) != 0 {
-		t.Errorf("Expected empty files, but got %d\n", len(folder.Files))
-	}
-
-	newName := "newfoldername"
-	folder.SetName(newName)
-
-	if folder.Name != newName {
-		t.Errorf("Expected foldername %s, but got %s\n", foldername, folder.Name)
-	}
+	folderTo := "newfoldername"
+	folder.SetName(folderTo)
+	assert.Equal(t, folder.Name, folderTo)
 }
 
 func TestFolderFiles(t *testing.T) {
@@ -87,16 +69,10 @@ func TestFolderFiles(t *testing.T) {
 	folder.AddFile(filename2, file2)
 
 	files := folder.GetFiles()
-	if len(files) != 2 {
-		t.Errorf("Expected two files, but got %d\n", len(files))
-	}
+	assert.Equal(t, len(files), 2)
 
 	folderFile1 := folder.GetFile(filename1)
-
-	if folderFile1 != file1 {
-		t.Errorf("Expected be the same folder\n")
-	}
-
+	assert.Equal(t, folderFile1, file1)
 }
 
 func TestUserFolderFile(t *testing.T) {
@@ -116,9 +92,7 @@ func TestUserFolderFile(t *testing.T) {
 	userFolder := user.GetFolder(foldername)
 	userFile := userFolder.GetFile(filename)
 
-	if userFile.Name != filename {
-		t.Errorf("Expected foldername %s, but got %s\n", filename, userFile.Name)
-	}
+	assert.Equal(t, userFile.Name, filename)
 }
 
 func TestSetupSystem(t *testing.T) {
@@ -126,9 +100,7 @@ func TestSetupSystem(t *testing.T) {
 	defer sys.Reset()
 	sys2 := SetupSystem()
 
-	if sys != sys2 {
-		t.Errorf("Expected only one system exists\n")
-	}
+	assert.Equal(t, sys, sys2)
 
 }
 
