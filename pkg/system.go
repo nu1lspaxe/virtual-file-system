@@ -266,6 +266,11 @@ func (s *System) RenameFolder(w io.Writer, ew io.Writer, username, folderFrom, f
 		fmt.Fprintln(ew, WarnNoFolders.ToString(folderFrom))
 		return
 	}
+	folder2 := user.GetFolder(folderTo)
+	if folder2 != nil {
+		fmt.Fprintln(ew, ErrAlreadyExists.ToString(folder2.Name))
+		return
+	}
 	if !s.CharsValidator.MatchString(folderTo) {
 		fmt.Fprintln(ew, ErrInvalidChars.ToString(folderTo))
 		return

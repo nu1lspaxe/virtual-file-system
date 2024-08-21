@@ -53,8 +53,12 @@ func ParseArgs(args []string) (sortBy, order, msg string) {
 		return sortBy, order, ""
 	}
 
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
+	if args[0][2:5] != "sort" {
+		return "name", "asc", ""
+	}
+
+	for _, a := range args {
+		switch a {
 		case "--sort-name":
 			sortBy = "name"
 		case "--sort-created":
@@ -67,6 +71,7 @@ func ParseArgs(args []string) (sortBy, order, msg string) {
 			return "", "", ErrInvalidFlag.ToString()
 		}
 	}
+
 	return sortBy, order, ""
 }
 
