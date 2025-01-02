@@ -53,10 +53,6 @@ func ParseArgs(args []string) (sortBy, order, msg string) {
 		return sortBy, order, ""
 	}
 
-	if args[0][2:5] != "sort" {
-		return "name", "asc", ""
-	}
-
 	for _, a := range args {
 		switch a {
 		case "--sort-name":
